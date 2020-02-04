@@ -371,3 +371,20 @@ type InitializeRoundEvent implements Transaction @entity {
   delegator: Delegator
   amount: BigInt
 }
+
+type WinningTicket @entity {
+  id: ID!
+  sender: String
+  recipient: String
+  faceValue: BigInt
+  winProb: BigInt
+  senderNonce: BigInt
+  recipientRand: BigInt
+  auxData: Bytes
+}
+
+type Stat @entity {
+  id: ID!
+  totalTickets: BigInt
+  totalFees: BigInt
+}

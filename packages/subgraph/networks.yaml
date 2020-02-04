@@ -21,6 +21,9 @@ mainnet:
     minter:
       address: "8573f2f5a3bd960eee3d998473e50c75cdbe6828"
       startBlock: 5533890
+    ticketBroker:
+      address: "5b1ce829384eebfa30286f12d1e7a695ca45f5d2"
+      startBlock: 5533890
   networkName: mainnet
 rinkeby:
   contracts:
@@ -44,5 +47,8 @@ rinkeby:
       startBlock: 0
     minter:
       address: "e5056d1fE48F562dd8AcB1BBFFa147223d448C1B"
+      startBlock: 0
+    ticketBroker:
+      address: "40897Ff6e44Ca2e145A691701897844669Bf7cee"
       startBlock: 0
   networkName: rinkeby
