@@ -38,6 +38,7 @@
   ],
   "env": {
     "CHANGEFEED_ACCESS_TOKEN": "changefeed-access-token",
-    "ETHERSCAN_API_KEY": "etherscan-api-key"
+    "ETHERSCAN_API_KEY": "etherscan-api-key",
+    "FORTMATIC_API_KEY": "fortmatic-api-key"
   }
 }
