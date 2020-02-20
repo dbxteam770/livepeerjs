@@ -5,7 +5,7 @@ export type TranscoderCardProps = {|
   ensName: string,
   feeShare: string,
   id: string,
-  lastRewardRound: string,
+  lastRewardRound: any,
   onBond?: any => void,
   onUnbond?: any => void,
   pendingRewardCut: string,
@@ -15,4 +15,6 @@ export type TranscoderCardProps = {|
   rewardCut: string,
   status: string,
   totalStake: string,
+  activationRound: string,
+  deactivationRound: string,
 |}

@@ -61,13 +61,17 @@ const MeDelegatorTranscoderQuery = gql`
     id
     active
     status
-    lastRewardRound
+    lastRewardRound {
+      id
+    }
     rewardCut
     feeShare
     pricePerSegment
     pendingRewardCut
     pendingFeeShare
     pendingPricePerSegment
+    activationRound
+    deactivationRound
   }
 
   fragment AccountFragment on Account {

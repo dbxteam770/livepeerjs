@@ -13,6 +13,9 @@ import {
   introspectSchema,
   makeRemoteExecutableSchema,
   mergeSchemas,
+  RenameTypes,
+  RenameRootFields,
+  transformSchema,
 } from 'graphql-tools'
 import { HttpLink } from 'apollo-link-http'
 import axios from 'axios'
@@ -90,8 +93,8 @@ export default async function createApolloClient(
     if (!(await isSubgraphAvailable(options.livepeerSubgraph))) {
       // Extend Transcoder type with rewards field to match remote schema
       const linkTypeDefs = `
-        type Reward {
-          rewardTokens: String,
+        type Pool {
+          rewardTokens: String
           round: Round
         }
         enum Transcoder_orderBy {
@@ -99,7 +102,6 @@ export default async function createApolloClient(
           active
           ensName
           status
-          lastRewardRound
           rewardCut
           feeShare
           pricePerSegment
@@ -107,14 +109,15 @@ export default async function createApolloClient(
           pendingFeeShare
           pendingPricePerSegment
           totalStake
-          rewards
+          pools
         }
         enum OrderDirection {
           asc
           desc
         }
         extend type Transcoder {
-          rewards(orderBy: Transcoder_orderBy, orderDirection: OrderDirection): [Reward]
+          ensName: String
+          pools(orderBy: Transcoder_orderBy, orderDirection: OrderDirection): [Pool]
         }
       `
       return mergeSchemas({
@@ -135,9 +138,19 @@ export default async function createApolloClient(
     }
 
     const subgraphSchema = await createSubgraphServiceSchema()
+    const transformedSubgraphSchema = transformSchema(subgraphSchema, [
+      new RenameTypes((name: string) =>
+        name == 'Delegator' ? `Subgraph_${name}` : name,
+      ),
+    ])
 
+    const linkTypeDefs = `
+      extend type Transcoder {
+        ensName: String
+      }
+    `
     return mergeSchemas({
-      schemas: [schema, subgraphSchema],
+      schemas: [schema, transformedSubgraphSchema, linkTypeDefs],
     })
   }
 

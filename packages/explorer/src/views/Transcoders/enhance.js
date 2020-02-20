@@ -29,14 +29,15 @@ const MeDelegatorTranscoderQuery = gql`
     id
     active
     status
-    lastRewardRound
     rewardCut
     feeShare
+    activationRound
+    deactivationRound
     pricePerSegment
     pendingRewardCut
     pendingFeeShare
     pendingPricePerSegment
-    rewards(orderBy: id, orderDirection: desc) {
+    pools(orderBy: id, orderDirection: desc) {
       rewardTokens
       round {
         id

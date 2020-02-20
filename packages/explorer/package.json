@@ -51,7 +51,7 @@
     "build:web": "react-scripts build",
     "copy-docs": "rm -rf ../../docs/explorer && mkdir ../../docs/explorer && cp docs/index.html ../../docs/explorer && cp README.md ../../docs/explorer",
     "coverage": "react-scripts test --env=jsdom --coverage",
-    "deploy": "poosh",
+    "deploy": "now --public ./build --prod",
     "eject": "react-scripts eject",
     "postbuild": "cp build/index.html build/404.html",
     "serve": "serve -s build",
@@ -74,8 +74,6 @@
     "electron-builder": "20.4.1",
     "flow-bin": "0.97.0",
     "gh-pages": "^2.0.1",
-    "poosh-cli": "^2.0.0",
-    "poosh-plugin-s3": "^2.0.0",
     "serve": "^11.0.0",
     "uglify-es": "^3.2.0"
   },

@@ -12,7 +12,8 @@ import type { TranscoderCardProps } from './props'
 /** Used when displaying Transcoder struct data in a list */
 const TranscoderCard: React.ComponentType<TranscoderCardProps> = styled(
   ({
-    active,
+    activationRound,
+    deactivationRound,
     currentRound,
     bonded,
     bondedAmount,
@@ -23,15 +24,17 @@ const TranscoderCard: React.ComponentType<TranscoderCardProps> = styled(
     status,
     onBond,
     onUnbond,
-    pendingFeeShare: feeShare,
-    pendingPricePerSegment: pricePerSegment,
-    pendingRewardCut: rewardCut,
+    feeShare,
+    rewardCut,
     totalStake,
-    rewards,
+    pools,
   }) => {
+    const active =
+      activationRound <= currentRound.data.id &&
+      deactivationRound > currentRound.data.id
     let missedCalls: number = 0
-    if (rewards) {
-      missedCalls = rewards
+    if (pools) {
+      missedCalls = pools
         .sort((a, b) => b.round.id - a.round.id)
         .filter(
           reward =>
@@ -86,16 +89,6 @@ const TranscoderCard: React.ComponentType<TranscoderCardProps> = styled(
             help="How much you as the delegator receive of the Price/segment. For example if Fee Share is 25%, If a transcoder were to charge 100WEI in fees per segment, they would pay 25WEI to the bonded nodes."
           />
           <TranscoderStat
-            label="Price"
-            symbol="GWEI"
-            type="token"
-            unit="gwei"
-            decimals={9}
-            value={pricePerSegment}
-            width="128px"
-            help="The amount the Transcoder will charge broadcasters per segment. Wei is the base unit of ethereum, which is 10^18 Wei = 1 ETH. The price illustrated is based on a segment of video, which is 4 seconds"
-          />
-          <TranscoderStat
             decimals={2}
             label="Total Stake"
             symbol="LPT"
@@ -105,7 +98,7 @@ const TranscoderCard: React.ComponentType<TranscoderCardProps> = styled(
             width="128px"
             help="Total amount of LPT staked towards this node, including the transcoders own stake."
           />
-          {rewards && (
+          {pools && (
             <TranscoderStat
               decimals={2}
               label="Missed Reward Calls"
@@ -184,7 +177,11 @@ const TranscoderCard: React.ComponentType<TranscoderCardProps> = styled(
       white-space: nowrap;
       text-overflow: ellipsis;
       font-size: 14px;
-      color: ${({ active }) => (active ? 'darkseagreen' : 'orange')};
+      color: ${({ currentRound, activationRound, deactivationRound }) =>
+        activationRound <= currentRound.data.id &&
+        deactivationRound > currentRound.data.id
+          ? 'darkseagreen'
+          : 'orange'};
     }
   }
   > .stats {

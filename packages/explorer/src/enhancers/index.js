@@ -432,7 +432,9 @@ export const TranscodersQuery = gql`
     active
     ensName
     status
-    lastRewardRound
+    lastRewardRound {
+      id
+    }
     rewardCut
     feeShare
     pricePerSegment
@@ -440,7 +442,9 @@ export const TranscodersQuery = gql`
     pendingFeeShare
     pendingPricePerSegment
     totalStake
-    rewards(orderBy: id, orderDirection: desc) {
+    activationRound
+    deactivationRound
+    pools(orderBy: id, orderDirection: desc) {
       rewardTokens
       round {
         id
@@ -449,7 +453,7 @@ export const TranscodersQuery = gql`
   }
 
   query TranscodersQuery {
-    transcoders(where: { status: "Registered" }) {
+    transcoders(where: { status: Registered }) {
       ...TranscoderFragment
     }
   }

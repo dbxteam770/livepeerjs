@@ -1,14 +1,8 @@
 // @flow
 import * as React from 'react'
 import { Icon } from 'rmwc/Icon'
-import { formatBalance, formatPercentage } from '../../utils'
-import {
-  Button,
-  EmptyMessage,
-  MetricBox,
-  Tooltip,
-  Wrapper,
-} from '../../components'
+import { formatPercentage } from '../../utils'
+import { Button, EmptyMessage, MetricBox, Wrapper } from '../../components'
 import enhance from './enhance'
 
 type AccountTranscodingViewProps = {
@@ -25,17 +19,16 @@ const AccountTranscodingView: React.ComponentType<AccountTranscodingViewProps> =
   match,
 }) => {
   const {
-    active,
+    activationRound,
+    deactivationRound,
     status,
     lastRewardRound,
     rewardCut,
     feeShare,
-    pricePerSegment,
-    pendingRewardCut,
-    pendingFeeShare,
-    pendingPricePerSegment,
   } = transcoder.data
   const currentRoundNum = currentRound.data.id
+  const active =
+    activationRound <= currentRoundNum && deactivationRound > currentRoundNum
   const notRegistered = status !== 'Registered'
   return (
     <Wrapper>
@@ -90,27 +83,8 @@ const AccountTranscodingView: React.ComponentType<AccountTranscodingViewProps> =
                   fontSize: 24,
                 }}
               >
-                {`${formatPercentage(rewardCut)}`}%{' '}
-                {rewardCut !== pendingRewardCut && (
-                  <Tooltip text="This value will change next round">
-                    <Icon
-                      use="hourglass_empty"
-                      style={{ opacity: 0.75, cursor: 'help', color: 'orange' }}
-                    />
-                  </Tooltip>
-                )}
+                {`${rewardCut ? formatPercentage(rewardCut) : 0}`}%
               </span>
-            }
-            subvalue={
-              rewardCut !== pendingRewardCut ? (
-                <span>
-                  A reward cut of{' '}
-                  <strong>{`${formatPercentage(pendingRewardCut)}%`}</strong>{' '}
-                  will kick in next round
-                </span>
-              ) : (
-                ''
-              )
             }
           />
           <MetricBox
@@ -124,65 +98,8 @@ const AccountTranscodingView: React.ComponentType<AccountTranscodingViewProps> =
                   fontSize: 24,
                 }}
               >
-                {`${formatPercentage(feeShare)}`}%{' '}
-                {feeShare !== pendingFeeShare && (
-                  <Tooltip text="This value will change next round">
-                    <Icon
-                      use="hourglass_empty"
-                      style={{ opacity: 0.75, cursor: 'help', color: 'orange' }}
-                    />
-                  </Tooltip>
-                )}
+                {`${feeShare ? formatPercentage(feeShare) : 0}`}%
               </span>
-            }
-            subvalue={
-              feeShare !== pendingFeeShare ? (
-                <span>
-                  A fee share of{' '}
-                  <strong>{`${formatPercentage(pendingFeeShare)}%`}</strong>{' '}
-                  will kick in next round
-                </span>
-              ) : (
-                ''
-              )
-            }
-          />
-          <MetricBox
-            help="The price a transcoder charges a broadcaster to transcode each segment of video"
-            title="Price Per Segment"
-            value={
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  fontSize: 24,
-                }}
-              >
-                {`${formatBalance(pricePerSegment, 18, 'gwei')} GWEI`}{' '}
-                {pricePerSegment !== pendingPricePerSegment && (
-                  <Tooltip text="This value will change next round">
-                    <Icon
-                      use="hourglass_empty"
-                      style={{ opacity: 0.75, cursor: 'help', color: 'orange' }}
-                    />
-                  </Tooltip>
-                )}
-              </span>
-            }
-            subvalue={
-              pricePerSegment !== pendingPricePerSegment ? (
-                <span>
-                  A price per segment of{' '}
-                  <strong>{`${formatBalance(
-                    pendingPricePerSegment,
-                    18,
-                    'gwei',
-                  )} GWEI`}</strong>{' '}
-                  will kick in next round
-                </span>
-              ) : (
-                ''
-              )
             }
           />
           <MetricBox
@@ -191,7 +108,7 @@ const AccountTranscodingView: React.ComponentType<AccountTranscodingViewProps> =
             value={
               !active ? (
                 'N/A'
-              ) : currentRoundNum === lastRewardRound ? (
+              ) : currentRoundNum === lastRewardRound.id ? (
                 <span
                   style={{
                     display: 'inline-flex',
@@ -199,7 +116,7 @@ const AccountTranscodingView: React.ComponentType<AccountTranscodingViewProps> =
                     fontSize: 24,
                   }}
                 >
-                  {lastRewardRound}
+                  {lastRewardRound.id}
                   <Icon use="check" style={{ color: 'var(--primary)' }} />
                 </span>
               ) : (
@@ -210,7 +127,7 @@ const AccountTranscodingView: React.ComponentType<AccountTranscodingViewProps> =
                     fontSize: 24,
                   }}
                 >
-                  {lastRewardRound}
+                  {lastRewardRound.id}
                   <Icon use="close" style={{ color: 'var(--error)' }} />
                 </span>
               )
@@ -218,7 +135,7 @@ const AccountTranscodingView: React.ComponentType<AccountTranscodingViewProps> =
             subvalue={
               !active
                 ? 'No rewards to claim while inactive'
-                : currentRoundNum === lastRewardRound
+                : currentRoundNum === lastRewardRound.id
                 ? 'Transcoder claimed rewards this round'
                 : 'Transcoder has not claimed rewards for current round'
             }

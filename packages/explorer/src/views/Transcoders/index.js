@@ -57,7 +57,10 @@ const TranscodersView: React.ComponentType<TranscodersViewProps> = ({
   const numActive = (transcoders => {
     let n = 0
     for (const trans of transcoders.data) {
-      n += trans.active ? 1 : 0
+      const active =
+        trans.activationRound <= currentRound.data.id &&
+        trans.deactivationRound > currentRound.data.id
+      n += active ? 1 : 0
     }
     return n
   })(transcoders)
@@ -161,7 +164,6 @@ const TranscodersView: React.ComponentType<TranscodersViewProps> = ({
                   <option value="totalStake">Total Stake</option>
                   <option value="pendingRewardCut">Reward Cut</option>
                   <option value="pendingFeeShare">Fee Share</option>
-                  <option value="pendingPricePerSegment">Price</option>
                   <option value="missedCalls">Missed Reward Calls</option>
                 </select>
               </div>
@@ -269,8 +271,8 @@ const createCompareFunction = (asc: boolean, sort: string) => (
   let _a: number
   let _b: number
   if (sort === 'missedCalls') {
-    _a = new BN(a['rewards'].filter(r => r.rewardTokens === null).length, 10)
-    _b = new BN(b['rewards'].filter(r => r.rewardTokens === null).length, 10)
+    _a = new BN(a['pools'].filter(r => r.rewardTokens === null).length, 10)
+    _b = new BN(b['pools'].filter(r => r.rewardTokens === null).length, 10)
   } else {
     _a = new BN(a[sort], 10)
     _b = new BN(b[sort], 10)

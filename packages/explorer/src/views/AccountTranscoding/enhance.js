@@ -6,24 +6,25 @@ import { connectCoinbaseQuery, connectCurrentRoundQuery } from '../../enhancers'
 
 const AccountTranscoderQuery = gql`
   fragment TranscoderFragment on Transcoder {
-    id
     active
     status
-    lastRewardRound
+    lastRewardRound {
+      id
+    }
     rewardCut
     feeShare
     pricePerSegment
     pendingRewardCut
     pendingFeeShare
     pendingPricePerSegment
+    activationRound
+    deactivationRound
   }
 
-  query AccountTranscoderQuery($id: String!) {
-    account(id: $id) {
+  query AccountTranscoderQuery($id: ID!) {
+    transcoder(id: $id) {
       id
-      transcoder {
-        ...TranscoderFragment
-      }
+      ...TranscoderFragment
     }
   }
 `
@@ -31,12 +32,12 @@ const AccountTranscoderQuery = gql`
 const connectAccountTranscoderQuery = graphql(AccountTranscoderQuery, {
   props: ({ data, ownProps }) => {
     const { account, ...queryProps } = data
-    const { transcoder } = account || {}
+    const { transcoder } = data || {}
     return {
       ...ownProps,
       transcoder: {
         ...queryProps,
-        data: mockTranscoder(transcoder),
+        data: mockTranscoder(transcoder ? transcoder : {}),
       },
     }
   },

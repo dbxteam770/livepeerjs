@@ -61,7 +61,7 @@ declare type Transcoder = {
   active: boolean,
   feeShare: string,
   id: string,
-  lastRewardRound: string,
+  lastRewardRound: Round,
   pricePerSegment: string,
   pendingRewardCut: string,
   pendingFeeShare: string,
@@ -69,7 +69,7 @@ declare type Transcoder = {
   rewardCut: string,
   status: string,
   totalStake: string,
-  rewards: Array,
+  pools: Array,
 }
 
 declare type TxReceipt = {

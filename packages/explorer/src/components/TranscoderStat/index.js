@@ -12,7 +12,7 @@ const TranscoderStat: React.ComponentType<TranscoderStatProps> = styled(
     switch (type) {
       case 'percentage': {
         const { decimals = 2 } = props
-        formattedValue = formatPercentage(value, decimals) + '%'
+        formattedValue = value ? formatPercentage(value, decimals) + '%' : '0%'
         break
       }
       case 'token': {
