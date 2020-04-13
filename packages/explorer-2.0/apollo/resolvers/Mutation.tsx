@@ -1,4 +1,5 @@
 import { MAX_BATCH_CLAIM_ROUNDS } from '../../lib/utils'
+import Utils from 'web3-utils'
 
 /**
  * Approve an amount for an ERC20 token transfer
@@ -9,15 +10,25 @@ import { MAX_BATCH_CLAIM_ROUNDS } from '../../lib/utils'
  */
 export async function approve(_obj, _args, _ctx) {
   const { type, amount } = _args
+  let gas
 
   switch (type) {
     case 'bond':
-      const gas = await _ctx.livepeer.rpc.estimateGas(
-        'LivepeerToken',
-        'approve',
-        [_ctx.livepeer.config.contracts.BondingManager.address, amount],
-      )
+      gas = await _ctx.livepeer.rpc.estimateGas('LivepeerToken', 'approve', [
+        _ctx.livepeer.config.contracts.BondingManager.address,
+        amount,
+      ])
       return await _ctx.livepeer.rpc.approveTokenBondAmount(amount, {
+        gas,
+        returnTxHash: true,
+      })
+    case 'createPoll':
+      gas = await _ctx.livepeer.rpc.estimateGas('LivepeerToken', 'approve', [
+        _ctx.livepeer.config.contracts.PollCreator.address,
+        amount,
+      ])
+
+      return await _ctx.livepeer.rpc.approveTokenPollCreationCost(amount, {
         gas,
         returnTxHash: true,
       })
@@ -57,7 +68,7 @@ export async function bond(_obj, _args, _ctx) {
 export async function batchClaimEarnings(_obj, _args, _ctx) {
   const Web3 = require('web3') // use web3 lib for batching transactions
   const web3 = new Web3(_ctx.provider)
-  const { lastClaimRound, endRound: lastEndRound} = _args
+  const { lastClaimRound, endRound: lastEndRound } = _args
   const { abi, address } = _ctx.livepeer.config.contracts.BondingManager
   const bondingManager = new web3.eth.Contract(abi, address)
   const totalRoundsToClaim = parseInt(lastEndRound) - parseInt(lastClaimRound)
@@ -67,38 +78,41 @@ export async function batchClaimEarnings(_obj, _args, _ctx) {
 
   let batch = new web3.BatchRequest()
 
-  let maxBatchGas = parseInt(await _ctx.livepeer.rpc.estimateGas(
-    'BondingManager',
-    'claimEarnings',
-    [(parseInt(lastClaimRound) + MAX_BATCH_CLAIM_ROUNDS).toString()],
-  ))
+  let maxBatchGas = parseInt(
+    await _ctx.livepeer.rpc.estimateGas('BondingManager', 'claimEarnings', [
+      (parseInt(lastClaimRound) + MAX_BATCH_CLAIM_ROUNDS).toString(),
+    ]),
+  )
 
   function addCall(endRound, gas) {
     calls.push(
       new Promise((res, rej) => {
         batch.add(
-          bondingManager.methods.claimEarnings(endRound)
-          .send
-          .request({
-            from: _ctx.account,
-            gas: parseInt(gas, 10) // truncate in case 'gas' is a float
-          },
-         (err, txHash) => {
-            if (err) rej(err);
-            else res(txHash)
-         })
+          bondingManager.methods.claimEarnings(endRound).send.request(
+            {
+              from: _ctx.account,
+              gas: parseInt(gas, 10), // truncate in case 'gas' is a float
+            },
+            (err, txHash) => {
+              if (err) rej(err)
+              else res(txHash)
+            },
+          ),
         )
-      })
+      }),
     )
   }
 
   for (let i = 1; i <= quotient; i++) {
     let end = (parseInt(lastClaimRound) + i * MAX_BATCH_CLAIM_ROUNDS).toString()
-    addCall(end, maxBatchGas * 1.05) 
+    addCall(end, maxBatchGas * 1.05)
   }
 
   if (remainder) {
-    addCall(lastEndRound, (maxBatchGas / MAX_BATCH_CLAIM_ROUNDS) * remainder * 1.05)
+    addCall(
+      lastEndRound,
+      (maxBatchGas / MAX_BATCH_CLAIM_ROUNDS) * remainder * 1.05,
+    )
   }
 
   batch.execute()
@@ -215,6 +229,36 @@ export async function initializeRound(_obj, _args, _ctx) {
   )
   return await _ctx.livepeer.rpc.initializeRound({
     gas,
+    returnTxHash: true,
+  })
+}
+
+/**
+ * Creates a poll
+ * @param obj
+ * @return {Promise}
+ */
+export async function createPoll(_obj, _args, _ctx) {
+  const { proposal } = _args
+  const gas = await _ctx.livepeer.rpc.estimateGas('PollCreator', 'createPoll', [
+    Utils.fromAscii(proposal),
+  ])
+  return await _ctx.livepeer.rpc.createPoll(Utils.fromAscii(proposal), {
+    ..._ctx.livepeer.config.defaultTx,
+    gas,
+    returnTxHash: true,
+  })
+}
+
+/**
+ * Creates a poll
+ * @param obj
+ * @return {Promise}
+ */
+export async function vote(_obj, _args, _ctx) {
+  const { pollAddress, choiceId } = _args
+  return await _ctx.livepeer.rpc.vote(pollAddress, choiceId, {
+    ..._ctx.livepeer.config.defaultTx,
     returnTxHash: true,
   })
 }

@@ -37,12 +37,14 @@
     }
   ],
   "env": {
-    "CHANGEFEED_ACCESS_TOKEN": "@changefeed_access_token"
+    "CHANGEFEED_ACCESS_TOKEN": "@changefeed_access_token",
+    "GITHUB_ACCESS_TOKEN": "@github_access_token"
   },
   "build": {
     "env": {
       "ETHERSCAN_API_KEY": "@etherscan_api_key",
       "FORTMATIC_API_KEY": "@fortmatic_api_key",
+      "ALCHEMY_API_KEY": "@alchemy_api_key",
       "PORTIS_DAPP_ID": "@portis_dapp_id",
       "GA_TRACKING_ID": "@ga_tracking_id"
     }

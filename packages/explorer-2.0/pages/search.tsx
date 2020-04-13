@@ -1,5 +1,5 @@
 import { Flex, Styled } from 'theme-ui'
-import Search from '../public/img/search.svg'
+import SearchIcon from '../public/img/search.svg'
 import Router from 'next/router'
 import { withApollo } from '../lib/apollo'
 import Layout from '../layouts/main'
@@ -10,7 +10,7 @@ function handleSubmit(e) {
   Router.push(`/accounts/[account]/[slug]`, `/accounts/${input.value}/staking`)
 }
 
-export default withApollo(() => {
+const Search = () => {
   return (
     <Layout title="Livepeer Explorer - Search" headerTitle="Search">
       <Flex
@@ -28,7 +28,7 @@ export default withApollo(() => {
             alignItems: 'center',
           }}
         >
-          <Search
+          <SearchIcon
             sx={{
               width: [20, 20, 20, 26],
               height: [20, 20, 20, 26],
@@ -51,7 +51,7 @@ export default withApollo(() => {
           }}
         >
           <button sx={{ display: 'flex', alignItems: 'center' }} type="submit">
-            <Search
+            <SearchIcon
               sx={{
                 cursor: 'pointer',
                 position: 'absolute',
@@ -83,4 +83,8 @@ export default withApollo(() => {
       </Flex>
     </Layout>
   )
-})
+}
+
+export default withApollo({
+  ssr: false,
+})(Search)

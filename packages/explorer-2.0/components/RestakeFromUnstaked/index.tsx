@@ -32,11 +32,8 @@ export default ({ lock }) => {
     result: { mutate: rebondFromUnbonded, isBroadcasted, isMined, txHash },
     reset,
   } = useWeb3Mutation(REBOND_FROM_UNBONDED, {
-    variables: {
-      unbondingLockId: lock.unbondingLockId,
-      delegate: lock.delegate.id,
-    },
     context: {
+      chainId: context.chainId,
       provider: context.library._web3Provider,
       account: context.account.toLowerCase(),
       returnTxHash: true,
@@ -54,7 +51,12 @@ export default ({ lock }) => {
       <Button
         onClick={async () => {
           try {
-            await rebondFromUnbonded(lock.unbondingLockId)
+            await rebondFromUnbonded({
+              variables: {
+                unbondingLockId: lock.unbondingLockId,
+                delegate: lock.delegate.id,
+              },
+            })
           } catch (e) {
             return {
               error: e.message.replace('GraphQL error: ', ''),
@@ -106,7 +108,9 @@ export default ({ lock }) => {
                 as="a"
                 target="_blank"
                 rel="noopener noreferrer"
-                href={`https://etherscan.io/tx/${txHash}`}
+                href={`https://${
+                  context.chainId === 4 ? 'rinkeby.' : ''
+                }etherscan.io/tx/${txHash}`}
               >
                 View on Etherscan{' '}
                 <NewTab sx={{ ml: 1, width: 16, height: 16 }} />

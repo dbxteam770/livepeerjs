@@ -53,7 +53,7 @@ const groupBy = key => array =>
 
 const groupByType = groupBy('type')
 
-export default withApollo(() => {
+const WhatsNew = () => {
   const uri = 'https://explorer.livepeer.org/api/graphql'
   const [data, setData] = useState(null)
   const apolloFetch = createApolloFetch({ uri })
@@ -170,4 +170,8 @@ export default withApollo(() => {
       )}
     </Layout>
   )
-})
+}
+
+export default withApollo({
+  ssr: false,
+})(WhatsNew)

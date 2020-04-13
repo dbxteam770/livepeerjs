@@ -8,3 +8,4 @@ declare module '*.jpeg'
 declare module '*.gif'
 
 declare module 'graphql-type-json'
+declare module 'front-matter'

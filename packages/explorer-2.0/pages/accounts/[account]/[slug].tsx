@@ -22,7 +22,7 @@ import Approve from '../../../components/Approve'
 import FeesView from '../../../components/FeesView'
 import { useEffect } from 'react'
 
-export default withApollo(() => {
+const Account = () => {
   const accountViewQuery = require('../../../queries/accountView.gql')
   const accountQuery = require('../../../queries/account.gql')
   const router = useRouter()
@@ -218,7 +218,11 @@ export default withApollo(() => {
         ))}
     </Layout>
   )
-})
+}
+
+export default withApollo({
+  ssr: true,
+})(Account)
 
 function getTabs(
   role: string,

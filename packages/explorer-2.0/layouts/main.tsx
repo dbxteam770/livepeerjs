@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Drawer from '../components/Drawer'
 import Reset from '../lib/reset'
+import Ballot from '../public/img/ballot.svg'
 import Orchestrators from '../public/img/orchestrators.svg'
 import Search from '../public/img/search.svg'
 import Account from '../public/img/account.svg'
@@ -11,9 +12,11 @@ import Header from '../components/Header'
 import Router from 'next/router'
 import useWindowSize from 'react-use/lib/useWindowSize'
 import WalletModal from '../components/WalletModal'
-import { useQuery } from '@apollo/react-hooks'
+import { useQuery, useApolloClient } from '@apollo/react-hooks'
 import ReactGA from 'react-ga'
 import { isMobile } from 'react-device-detect'
+import ProgressBar from '../components/ProgressBar'
+import gql from 'graphql-tag'
 
 if (process.env.NODE_ENV === 'production') {
   ReactGA.initialize(process.env.GA_TRACKING_ID)
@@ -28,6 +31,20 @@ type DrawerItem = {
   icon: React.ElementType
   className?: string
 }
+
+const GET_TRANSACTIONS = gql`
+  {
+    transactions @client {
+      __typename
+      confirmed
+      txHash
+      title
+      startTime
+      estimate
+      gasPrice
+    }
+  }
+`
 
 export default ({
   children,
@@ -48,7 +65,6 @@ export default ({
   const threeBoxSpaceQuery = require('../queries/threeBoxSpace.gql')
   const context = useWeb3React()
   const { account } = context
-
   const { data } = useQuery(threeBoxSpaceQuery, {
     variables: {
       account: context?.account,
@@ -57,6 +73,8 @@ export default ({
     pollInterval: 10000,
     ssr: false,
   })
+
+  const { data: transactionsData } = useQuery(GET_TRANSACTIONS)
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { width } = useWindowSize()
@@ -78,6 +96,13 @@ export default ({
       as: '/',
       icon: Orchestrators,
       className: 'orchestrators',
+    },
+    {
+      name: 'Voting',
+      href: '/voting',
+      as: '/voting',
+      icon: Ballot,
+      className: 'voting',
     },
     {
       name: 'Search',
@@ -128,6 +153,10 @@ export default ({
         <title>{title}</title>
         <meta charSet="utf-8" />
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
       </Head>
       <Reset />
       <Styled.root>
@@ -149,6 +178,7 @@ export default ({
           <Flex
             sx={{
               bg: 'background',
+              position: 'relative',
               paddingLeft: [2, 2, 2, 32],
               paddingRight: [2, 2, 2, 32],
               width: ['100%', '100%', '100%', 'calc(100% - 275px)'],
@@ -159,6 +189,24 @@ export default ({
             </Flex>
           </Flex>
         </Box>
+        {/* {transactionsData.transactions.filter(t => !t.confirmed).length > 0 && (
+          <Box
+            id="progress-bar-root"
+            sx={{
+              position: 'fixed',
+              bg: 'surface',
+              bottom: 0,
+              width: ['100%', '100%', '100%', 'calc(100% - 275px)'],
+              left: [0, 0, 0, 275],
+            }}
+          >
+            <ProgressBar
+              title="Unlocking LPT for poll creation"
+              startTime={1587910633}
+              estimate={100000}
+            />
+          </Box>
+        )} */}
       </Styled.root>
     </>
   )

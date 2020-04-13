@@ -35,11 +35,8 @@ export default ({ transcoder, amount, disabled }) => {
     result: { mutate: bond, isBroadcasted, isMined, txHash },
     reset,
   } = useWeb3Mutation(BOND, {
-    variables: {
-      to: transcoder.id,
-      amount: Utils.toWei(amount ? amount.toString() : '0'),
-    },
     context: {
+      chainId: context.chainId,
       provider: context.library._web3Provider,
       account: context.account.toLowerCase(),
       returnTxHash: true,
@@ -58,7 +55,12 @@ export default ({ transcoder, amount, disabled }) => {
         disabled={disabled}
         onClick={async () => {
           try {
-            await bond()
+            await bond({
+              variables: {
+                to: transcoder.id,
+                amount: Utils.toWei(amount ? amount.toString() : '0'),
+              },
+            })
             client.writeData({
               data: {
                 tourOpen: false,
@@ -118,7 +120,9 @@ export default ({ transcoder, amount, disabled }) => {
                 as="a"
                 target="_blank"
                 rel="noopener noreferrer"
-                href={`https://etherscan.io/tx/${txHash}`}
+                href={`https://${
+                  context.chainId === 4 ? 'rinkeby.' : ''
+                }etherscan.io/tx/${txHash}`}
               >
                 View on Etherscan{' '}
                 <NewTab sx={{ ml: 1, width: 16, height: 16 }} />

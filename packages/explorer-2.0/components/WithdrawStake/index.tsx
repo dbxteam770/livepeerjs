@@ -29,11 +29,8 @@ export default ({ lock }) => {
     result: { mutate: withdrawStake, isBroadcasted, isMined, txHash },
     reset,
   } = useWeb3Mutation(WITHDRAW_STAKE, {
-    variables: {
-      unbondingLockId: lock.unbondingLockId,
-    },
-    notifyOnNetworkStatusChange: true,
     context: {
+      chainId: context.chainId,
       provider: context.library._web3Provider,
       account: context.account.toLowerCase(),
       returnTxHash: true,
@@ -51,7 +48,11 @@ export default ({ lock }) => {
       <Button
         onClick={async () => {
           try {
-            await withdrawStake(lock.unbondingLockId)
+            await withdrawStake({
+              variables: {
+                unbondingLockId: lock.unbondingLockId,
+              },
+            })
           } catch (e) {
             return {
               error: e.message.replace('GraphQL error: ', ''),
@@ -102,7 +103,9 @@ export default ({ lock }) => {
                 as="a"
                 target="_blank"
                 rel="noopener noreferrer"
-                href={`https://etherscan.io/tx/${txHash}`}
+                href={`https://${
+                  context.chainId === 4 ? 'rinkeby.' : ''
+                }etherscan.io/tx/${txHash}`}
               >
                 View on Etherscan{' '}
                 <NewTab sx={{ ml: 1, width: 16, height: 16 }} />

@@ -34,11 +34,8 @@ export default ({ delegator, currentRound }) => {
     result: { mutate: batchClaimEarnings, isBroadcasted, isMined, txHash },
     reset,
   } = useWeb3Mutation(BATCH_CLAIM_EARNINGS, {
-    variables: {
-      lastClaimRound: delegator.lastClaimRound.id,
-      endRound: currentRound.id,
-    },
     context: {
+      chainId: context.chainId,
       provider: context?.library?._web3Provider,
       account: context?.account?.toLowerCase(),
       returnTxHash: true,
@@ -75,7 +72,12 @@ export default ({ delegator, currentRound }) => {
                 variant="text"
                 onClick={async () => {
                   try {
-                    await batchClaimEarnings()
+                    await batchClaimEarnings({
+                      variables: {
+                        lastClaimRound: delegator.lastClaimRound.id,
+                        endRound: currentRound.id,
+                      },
+                    })
                   } catch (e) {
                     return {
                       error: e.message.replace('GraphQL error: ', ''),
@@ -157,7 +159,9 @@ export default ({ delegator, currentRound }) => {
                 as="a"
                 target="_blank"
                 rel="noopener noreferrer"
-                href={`https://etherscan.io/tx/${txHash}`}
+                href={`https://${
+                  context.chainId === 4 ? 'rinkeby.' : ''
+                }etherscan.io/tx/${txHash}`}
               >
                 View on Etherscan{' '}
                 <NewTab sx={{ ml: 1, width: 16, height: 16 }} />

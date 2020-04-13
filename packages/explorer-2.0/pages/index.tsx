@@ -12,7 +12,7 @@ import Approve from '../components/Approve'
 import Utils from 'web3-utils'
 import { useEffect } from 'react'
 
-export default withApollo(() => {
+const Home = () => {
   const orchestratorsViewQuery = require('../queries/orchestratorsView.gql')
   const accountQuery = require('../queries/account.gql')
   const context = useWeb3React()
@@ -81,7 +81,7 @@ export default withApollo(() => {
                   )}
               </Box>
             )}
-            {context.active && dataMyAccount.delegator?.lastClaimRound && (
+            {context.active && dataMyAccount?.delegator?.lastClaimRound && (
               <ClaimBanner
                 delegator={dataMyAccount.delegator}
                 currentRound={data.currentRound[0]}
@@ -117,4 +117,8 @@ export default withApollo(() => {
       )}
     </Layout>
   )
-})
+}
+
+export default withApollo({
+  ssr: false,
+})(Home)

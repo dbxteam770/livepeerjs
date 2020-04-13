@@ -12,6 +12,7 @@ import { buildStyles } from 'react-circular-progressbar'
 import { MdCheck, MdClose } from 'react-icons/md'
 import LivepeerSDK from '@livepeer/sdk'
 import moment from 'moment'
+import { detectNetwork } from '../../lib/utils'
 
 const GET_ROUND_MODAL_STATUS = gql`
   {
@@ -45,16 +46,24 @@ export default () => {
 
   const context = useWeb3React()
   const client = useApolloClient()
+  const [network, setNetwork] = useState('')
 
   useEffect(() => {
     const init = async () => {
+      let provider = ''
+      let controllerAddress = ''
+      const network = await detectNetwork(window['web3']?.currentProvider)
+      setNetwork(network?.type)
+      if (network?.type === 'rinkeby') {
+        provider = process.env.RPC_URL_4
+        controllerAddress = process.env.CONTROLLER_ADDRESS_RINKEBY
+      } else {
+        provider = process.env.RPC_URL_1
+        controllerAddress = process.env.CONTROLLER_ADDRESS_MAINNET
+      }
       const { rpc } = await LivepeerSDK({
-        provider:
-          context.chainId === 4 ? process.env.RPC_URL_4 : process.env.RPC_URL_1,
-        controllerAddress:
-          context.chainId === 4
-            ? process.env.CONTROLLER_ADDRESS_RINKEBY
-            : process.env.CONTROLLER_ADDRESS_MAINNET,
+        provider,
+        controllerAddress,
       })
       const { number } = await rpc.getBlock('latest')
       const {
@@ -64,6 +73,7 @@ export default () => {
         length,
         startBlock,
       } = await rpc.getCurrentRoundInfo()
+
       const response = await fetch(
         'https://ethgasstation.info/json/ethgasAPI.json',
       )
@@ -96,7 +106,7 @@ export default () => {
     return () => {
       clearInterval(interval)
     }
-  }, [])
+  }, [context.chainId])
 
   return (
     <Flex
@@ -120,14 +130,15 @@ export default () => {
       }
     >
       <Flex
-        sx={{ alignItems: 'center', fontFamily: 'monospace', color: 'primary' }}
+        sx={{
+          textTransform: 'capitalize',
+          alignItems: 'center',
+          fontFamily: 'monospace',
+          color: 'primary',
+        }}
       >
         <Play sx={{ width: 10, height: 10, mr: 1 }} />
-        {context.chainId
-          ? context.chainId == 1
-            ? 'Mainnet'
-            : 'Rinkeby'
-          : 'Mainnet'}
+        {network}
       </Flex>
       <Box sx={{ height: 16, mx: 1, backgroundColor: 'border', width: 1 }} />
       <Box sx={{ fontFamily: 'monospace' }}>

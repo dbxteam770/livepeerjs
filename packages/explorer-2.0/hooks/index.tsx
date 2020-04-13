@@ -13,54 +13,72 @@ export function useWeb3Mutation(mutation, options) {
     isMined: false,
     txHash: null,
     error: null,
+    gasPrice: null,
   }
 
   const [result, setResult] = useState(initialState)
 
   const reset = useCallback(() => {
-    setResult(initialState)
+    setResult({ ...initialState, mutate: result.mutate })
   }, [initialState])
 
-  const [mutate, { data, error: mutationError }] = useMutation(
-    mutation,
-    options,
-  )
+  const [
+    mutate,
+    { data, loading: dataLoading, error: mutationError },
+  ] = useMutation(mutation, options)
 
   const GET_TRANSACTION_STATUS = gql`
-    query getTxReceiptStatus($txHash: String!) {
+    query getTxReceiptStatus($txHash: String) {
       getTxReceiptStatus: getTxReceiptStatus(txHash: $txHash) {
         status
       }
     }
   `
 
-  const { data: transaction, error: queryError } = useQuery(
-    GET_TRANSACTION_STATUS,
+  const {
+    data: transactionStatus,
+    loading: transactionStatusLoading,
+    error: queryError,
+  } = useQuery(GET_TRANSACTION_STATUS, {
+    variables: {
+      txHash: data?.txHash,
+    },
+    notifyOnNetworkStatusChange: true,
+    // skip query if tx hasn't yet been broadcasted or has been mined
+    skip: !result.isBroadcasted || result.isMined,
+    context: options?.context,
+    ...options,
+  })
+
+  const GET_TRANSACTION = gql`
+    query transaction($txHash: String) {
+      transaction: transaction(txHash: $txHash)
+    }
+  `
+
+  const { data: transactionData, loading: transactionLoading } = useQuery(
+    GET_TRANSACTION,
     {
       variables: {
-        txHash: `${data && data.txHash}`,
+        txHash: data?.txHash,
       },
-      pollInterval: 2000,
-      // skip query if tx hasn't yet been broadcasted or has been mined
-      skip: !result.isBroadcasted || result.isMined,
+      notifyOnNetworkStatusChange: true,
+      // skip query if no txHash
+      skip: !data?.txHash,
+      ...options,
     },
   )
-
-  let isMining = !!(transaction && !transaction.getTxReceiptStatus.status)
-  let isMined = !!(transaction && transaction.getTxReceiptStatus.status)
 
   useEffect(() => {
     if (mutate) {
       setResult({ ...result, mutate })
     }
     if (data) {
-      setResult({ ...result, isBroadcasted: true, txHash: data.txHash })
-    }
-    if (transaction) {
       setResult({
         ...result,
-        isMining: isMining && !isMined,
-        isMined: isMined,
+        isBroadcasted: true,
+        isMining: true,
+        txHash: data.txHash,
       })
     }
     if (mutationError) {
@@ -69,14 +87,26 @@ export function useWeb3Mutation(mutation, options) {
         error: mutationError,
       })
     }
+    if (transactionData) {
+      setResult({
+        ...result,
+        gasPrice: transactionData.transaction.gasPrice.toString(),
+      })
+    }
     if (queryError) {
       setResult({
         ...result,
         error: queryError,
       })
     }
-  }, [transaction, data, mutate])
-
+    if (transactionStatus) {
+      setResult({
+        ...result,
+        isMined: true,
+        isMining: false,
+      })
+    }
+  }, [dataLoading, transactionLoading, transactionStatusLoading])
   return { result, reset }
 }
 

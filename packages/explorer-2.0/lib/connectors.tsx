@@ -8,6 +8,7 @@ const POLLING_INTERVAL = 12000
 const RPC_URLS: { [chainId: number]: string } = {
   1: process.env.RPC_URL_1 as string,
   4: process.env.RPC_URL_4 as string,
+  1337: 'http://localhost:8545',
 }
 
 export const Network = new NetworkConnector({
@@ -17,7 +18,7 @@ export const Network = new NetworkConnector({
 })
 
 export const Injected = new InjectedConnector({
-  supportedChainIds: [1, 4],
+  supportedChainIds: [1, 4, 1337],
 })
 
 // mainnet only

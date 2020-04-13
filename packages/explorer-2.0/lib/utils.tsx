@@ -1,5 +1,7 @@
 import { Delegator, Round, UnbondingLock } from '../@types'
 import Utils from 'web3-utils'
+import { useQuery } from '@apollo/react-hooks'
+import Web3 from 'web3'
 
 export const abbreviateNumber = (value, precision = 3) => {
   let newValue = value
@@ -182,4 +184,19 @@ export const detectNetwork = async provider => {
 
 export const checkAddressEquality = (address1, address2) => {
   return Utils.toChecksumAddress(address1) === Utils.toChecksumAddress(address2)
+}
+
+export const findClosestPrediction = (gasStationInfo, gas) => {
+  const counts = gasStationInfo.map(entry => {
+    return entry.gasprice
+  })
+
+  const goal = gas
+  const closest = counts.reduce(function(prev, curr) {
+    return Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev
+  })
+  const index = counts.indexOf(closest)
+  const closestGas = gasStationInfo[index]
+
+  return closestGas
 }
