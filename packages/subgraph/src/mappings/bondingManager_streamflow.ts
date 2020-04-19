@@ -16,6 +16,8 @@ import {
 } from '../types/schema'
 
 import { MAXIMUM_VALUE_UINT256, makeEventId } from '../../utils/helpers'
+import { RewardShareTemplate } from '../types/templates'
+import { DataSourceContext } from '@graphprotocol/graph-ts'
 
 export function transcoderUpdated(event: TranscoderUpdateEvent): void {
   let transcoderAddress = event.params.transcoder
@@ -115,12 +117,22 @@ export function earningsClaimed(event: EarningsClaimedEvent): void {
   let startRound = event.params.startRound
   let endRound = event.params.startRound
   let protocol = Protocol.load('0') || new Protocol('0')
-  let delegator =
-    Delegator.load(delegatorAddress.toHex()) ||
-    new Delegator(delegatorAddress.toHex())
+  let delegator = Delegator.load(delegatorAddress.toHex())
+
+  if (delegator == null) {
+    delegator = new Delegator(delegatorAddress.toHex())
+
+    // Watch for events specified in ShareTemplate, and trigger handlers
+    // with this context
+    let context = new DataSourceContext()
+    context.setString('delegator', delegatorAddress.toHex())
+    RewardShareTemplate.createWithContext(event.address, context)
+  }
 
   delegator.lastClaimRound = event.params.endRound.toString()
   delegator.bondedAmount = delegator.bondedAmount.plus(rewards)
+  delegator.pendingStake = delegator.bondedAmount.plus(rewards)
+  delegator.pendingFees = delegator.fees.plus(fees)
   delegator.fees = delegator.fees.plus(fees)
   delegator.save()
 

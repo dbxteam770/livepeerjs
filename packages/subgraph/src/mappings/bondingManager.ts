@@ -1,4 +1,4 @@
-import { Address, BigInt } from '@graphprotocol/graph-ts'
+import { Address, BigInt, DataSourceContext } from '@graphprotocol/graph-ts'
 
 // Import event types from the registrar contract ABIs
 import {
@@ -35,7 +35,7 @@ import {
   Round,
   Protocol,
 } from '../types/schema'
-
+import { RewardShareTemplate } from '../types/templates'
 import { makePoolId, makeEventId } from '../../utils/helpers'
 
 // Handler for TranscoderUpdate events
@@ -169,10 +169,10 @@ export function transcoderSlashed(event: TranscoderSlashedEvent): void {
 }
 
 export function bond(call: BondCall): void {
-  // After LIP11 was deployed (at block 6192000), we no longer have to rely on
+  // After LIP11 was deployed (at block 6194948), we no longer have to rely on
   // this call handler to get the amount bonded.
   // https://forum.livepeer.org/t/tributary-release-protocol-upgrade/354
-  if (call.block.number.le(BigInt.fromI32(6192000))) {
+  if (call.block.number.le(BigInt.fromI32(6194948))) {
     let bondingManager = BondingManager.bind(call.to)
     let newDelegateAddress = call.inputs._to
     let delegatorAddress = call.from
@@ -186,12 +186,21 @@ export function bond(call: BondCall): void {
     let transcoder =
       Transcoder.load(newDelegateAddress.toHex()) ||
       new Transcoder(newDelegateAddress.toHex())
-    let delegator =
-      Delegator.load(delegatorAddress.toHex()) ||
-      new Delegator(delegatorAddress.toHex())
+
     let delegate =
       Delegator.load(newDelegateAddress.toHex()) ||
       new Delegator(newDelegateAddress.toHex())
+
+    let delegator = Delegator.load(delegatorAddress.toHex())
+    if (delegator == null) {
+      delegator = new Delegator(delegatorAddress.toHex())
+
+      // Watch for events specified in ShareTemplate, and trigger handlers
+      // with this context
+      let context = new DataSourceContext()
+      context.setString('delegator', delegatorAddress.toHex())
+      RewardShareTemplate.createWithContext(call.to, context)
+    }
 
     protocol.totalActiveStake = totalActiveStake
 
@@ -249,6 +258,8 @@ export function bond(call: BondCall): void {
     delegator.delegate = newDelegateAddress.toHex()
     delegator.lastClaimRound = protocol.currentRound
     delegator.bondedAmount = delegatorData.value0
+    delegator.pendingStake = delegatorData.value0
+    delegator.pendingFees = delegatorData.value1
     delegator.fees = delegatorData.value1
     delegator.startRound = delegatorData.value4
     delegator.principal = delegator.principal.plus(amount)
@@ -303,6 +314,8 @@ export function unbond(event: UnbondEvent): void {
   delegator.delegate = null
   delegator.lastClaimRound = protocol.currentRound
   delegator.bondedAmount = delegatorData.value0
+  delegator.pendingStake = delegatorData.value0
+  delegator.pendingFees = delegatorData.value1
   delegator.fees = delegatorData.value1
   delegator.startRound = delegatorData.value4
   delegator.unbonded = delegator.unbonded.plus(delegatorData.value0)
@@ -389,6 +402,8 @@ export function claimEarnings(call: ClaimEarningsCall): void {
     let lastClaimRound = delegator.lastClaimRound
 
     delegator.bondedAmount = delegatorData.value0
+    delegator.pendingStake = delegatorData.value0
+    delegator.pendingFees = delegatorData.value1
     delegator.fees = delegatorData.value1
     delegator.lastClaimRound = endRound.toString()
     delegator.save()
@@ -467,6 +482,8 @@ export function withdrawFees(event: WithdrawFeesEvent): void {
   withdrawFeesTransaction.save()
 
   delegator.bondedAmount = delegatorData.value0
+  delegator.pendingStake = delegatorData.value0
+  delegator.pendingFees = delegatorData.value1
   delegator.fees = delegatorData.value1
   delegator.withdrawnFees = delegator.withdrawnFees.plus(withdrawnFees)
   delegator.lastClaimRound = protocol.currentRound

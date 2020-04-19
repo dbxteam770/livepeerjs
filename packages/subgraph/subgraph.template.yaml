@@ -56,11 +56,11 @@ dataSources:
           handler: withdrawFees
         - event: ParameterUpdate(string)
           handler: parameterUpdate
-      # callHandlers:
-      #   - function: claimEarnings(uint256)
-      #     handler: claimEarnings
-      #   - function: bond(uint256,address)
-      #     handler: bond
+      callHandlers:
+        - function: claimEarnings(uint256)
+          handler: claimEarnings
+        - function: bond(uint256,address)
+          handler: bond
   - kind: ethereum/contract
     name: BondingManager_LIP11
     network: {{networkName}}
@@ -343,3 +343,43 @@ templates:
       eventHandlers:
         - event: Vote(indexed address,uint256)
           handler: vote
+  - kind: ethereum/contract
+    name: RewardShareTemplate
+    network: {{networkName}}
+    source:
+      abi: BondingManager_streamflow
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ./src/mappings/shareHandlers.ts
+      abis:
+        - name: BondingManager_streamflow
+          file: ./abis/BondingManager_streamflow.json
+        - name: BondingManager_genesis
+          file: ./abis/BondingManager.json
+      entities:
+        - Delegator
+        - Share
+      eventHandlers:
+        - event: Reward(indexed address,uint256)
+          handler: updateShareOnReward
+  # - kind: ethereum/contract
+  #   name: FeeShareTemplate
+  #   network: {{networkName}}
+  #   source:
+  #     abi: TicketBroker
+  #   mapping:
+  #     kind: ethereum/events
+  #     apiVersion: 0.0.4
+  #     language: wasm/assemblyscript
+  #     file: ./src/mappings/shareHandlers.ts
+  #     abis:
+  #       - name: TicketBroker
+  #         file: ./abis/TicketBroker.json
+  #     entities:
+  #       - Delegator
+  #       - Share
+      # eventHandlers:
+      #   - event: WinningTicketRedeemed(indexed address,indexed address,uint256,uint256,uint256,uint256,bytes)
+      #     handler: updateShareOnwinningTicketRedeemed

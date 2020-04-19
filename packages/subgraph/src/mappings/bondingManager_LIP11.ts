@@ -1,5 +1,5 @@
 // Import types and APIs from graph-ts
-import { store } from '@graphprotocol/graph-ts'
+import { store, DataSourceContext } from '@graphprotocol/graph-ts'
 
 // Import event types from the registrar contract ABIs
 import {
@@ -27,6 +27,7 @@ import {
   makeEventId,
   EMPTY_ADDRESS,
 } from '../../utils/helpers'
+import { RewardShareTemplate } from '../types/templates'
 
 export function bond(event: BondEvent): void {
   let bondingManager = BondingManager.bind(event.address)
@@ -50,6 +51,16 @@ export function bond(event: BondEvent): void {
   let delegator =
     Delegator.load(delegatorAddress.toHex()) ||
     new Delegator(delegatorAddress.toHex())
+
+  if (delegator == null) {
+    delegator = new Delegator(delegatorAddress.toHex())
+
+    // Watch for events specified in ShareTemplate, and trigger handlers
+    // with this context
+    let context = new DataSourceContext()
+    context.setString('delegator', delegatorAddress.toHex())
+    RewardShareTemplate.createWithContext(event.address, context)
+  }
 
   protocol.totalActiveStake = totalActiveStake
 
@@ -96,6 +107,8 @@ export function bond(event: BondEvent): void {
   delegator.delegate = newDelegateAddress.toHex()
   delegator.lastClaimRound = protocol.currentRound
   delegator.bondedAmount = bondedAmount
+  delegator.pendingStake = bondedAmount
+  delegator.pendingFees = delegatorData.value1
   delegator.fees = delegatorData.value1
   delegator.startRound = delegatorData.value4
   delegator.principal = delegator.principal.plus(additionalAmount)
@@ -157,6 +170,8 @@ export function unbond(event: UnbondEvent): void {
   let delegatorData = bondingManager.getDelegator(delegatorAddress)
   delegator.lastClaimRound = protocol.currentRound
   delegator.bondedAmount = delegatorData.value0
+  delegator.pendingStake = delegatorData.value0
+  delegator.pendingFees = delegatorData.value1
   delegator.fees = delegatorData.value1
   delegator.startRound = delegatorData.value4
   delegator.unbonded = delegator.unbonded.plus(amount)
@@ -241,6 +256,8 @@ export function rebond(event: RebondEvent): void {
   delegator.startRound = delegatorData.value4
   delegator.lastClaimRound = protocol.currentRound
   delegator.bondedAmount = delegatorData.value0
+  delegator.pendingStake = delegatorData.value0
+  delegator.pendingFees = delegatorData.value1
   delegator.fees = delegatorData.value1
   delegator.unbonded = delegator.unbonded.minus(amount)
 
