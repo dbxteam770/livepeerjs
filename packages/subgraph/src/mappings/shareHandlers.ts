@@ -70,7 +70,7 @@ export function calculateRewards(
     share.pool = poolId
     share.round = currentRound.toString()
     share.delegator = delegator.id
-    delegator.pendingStake = bondedAmount.plus(share.rewardTokens as BigInt)
+    delegator.pendingStake = delegator.pendingStake.plus(share.rewardTokens as BigInt)
     share.save()
     delegator.save()
   }
@@ -130,7 +130,7 @@ export function calculateRewardsPreviousVersion(
     share.pool = poolId
     share.round = currentRound.toString()
     share.delegator = delegator.id
-    delegator.pendingStake = bondedAmount.plus(share.rewardTokens as BigInt)
+    delegator.pendingStake = delegator.pendingStake.plus(share.rewardTokens as BigInt)
 
     share.save()
     delegator.save()
